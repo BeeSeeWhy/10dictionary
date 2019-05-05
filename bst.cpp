@@ -1,164 +1,165 @@
+#include <iomanip>
 #include <iostream>
-#include <math.h>
-#include "Node.h"
-//#include "Person.h"
+#include "bst.h"
+#include "Entry.h"
 using namespace std;
 
-template <class ItemType>
-class BST
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::insert(Node *&nodePtr, Node* &newNode)
 {
-private:
-    Node<ItemType> *root;
-    void addHelper(Node<ItemType> *root, ItemType val)
+    if (nodePtr == nullptr)
+        nodePtr = newNode;
+    else if (newNode->key < nodePtr->key)
+        insert(nodePtr->left, newNode);
+    else
+        insert(nodePtr->right, newNode);
+} // end insert
+
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::add(KeyType searchKey, ValueType item)
+{
+    Node* newNode = nullptr;
+    newNode = new Node;
+    newNode->value = item;
+    newNode->key = searchKey;
+    newNode->left = newNode->right = nullptr;
+    insert(root, newNode);
+} // end insertNode
+
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::destroySubTree(Node* nodePtr)
+{
+    if (nodePtr)
     {
-        if (root->value > val)
-        {
-            if (!root->left)
-                root->left = new Node<ItemType>(val);
-            else
-                addHelper(root->left, val);
-        } // end if
-        else
-        {
-            if (!root->right)
-                root->right = new Node<ItemType>(val);
-            else
-                addHelper(root->right, val);
-        } // end else
-    }
+        if (nodePtr->left)
+            destroySubTree(nodePtr->left);
+        if (nodePtr->right)
+            destroySubTree(nodePtr->right);
+        delete nodePtr;
+    } // end if
+} // end destroySubTree
 
-    void printHelper(Node<ItemType> *root)
+template <class KeyType, class ValueType>
+bool BST<KeyType, ValueType>::searchNode(KeyType searchKey)
+{
+    Node* nodePtr = root;
+
+    while (nodePtr)
     {
-        if (!root)
-          return;
-        printHelper(root->left);
-        cout << root->value << ' ';
-        printHelper(root->right);
-    } // end printHelper
-
-    int nodesCountHelper(Node<ItemType> *root) {
-        if (!root) return 0;
-        else return 1 + nodesCountHelper(root->left) + nodesCountHelper(root->right);
-    }
-
-    int heightHelper(Node<ItemType> *root) {
-        if (!root) return 0;
-        else return 1 + max(heightHelper(root->left), heightHelper(root->right));
-    }
-
-    void printMaxPathHelper(Node<ItemType> *root) {
-        if (!root) return;
-        cout<<root->value<<' ';
-        if (heightHelper(root->left) > heightHelper(root->right)) {
-            printMaxPathHelper(root->left);
-        } else {
-            printMaxPathHelper(root->right);
-        }
-    }
-
-    bool deleteValueHelper(Node<ItemType>* parent, Node<ItemType>* current, ItemType value) {
-        if (!current) return false;
-        if (current->value == value) {
-            if (current->left == NULL || current->right == NULL) {
-                Node<ItemType>* temp = current->left;
-                if (current->right) temp = current->right;
-                if (parent) {
-                    if (parent->left == current) {
-                        parent->left = temp;
-                    } else {
-                        parent->right = temp;
-                    }
-                } else {
-                    this->root = temp;
-                }
-            } else {
-                Node<ItemType>* validSubs = current->right;
-                while (validSubs->left) {
-                    validSubs = validSubs->left;
-                }
-                ItemType temp = current->value;
-                current->value = validSubs->value;
-                validSubs->value = temp;
-                return deleteValueHelper(current, current->right, temp);
-            }
-            delete current;
+        if (nodePtr->key == searchKey)
             return true;
-        }
-        return deleteValueHelper(current, current->left, value) ||
-               deleteValueHelper(current, current->right, value);
+        else if (searchKey < nodePtr->key)
+            nodePtr = nodePtr->left;
+        else
+            nodePtr = nodePtr->right;
+    } // end while
+    return false;
+} // end searchNode
+
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::remove(KeyType searchKey)
+{
+    deleteNode(searchKey, root);
+} // end remove
+
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::deleteNode(KeyType searchKey, Node* &nodePtr)
+{
+    //cout << " we are here\n";
+    if (searchKey < nodePtr->key)
+    {
+        //cout << "we are here\n";
+        deleteNode(searchKey, nodePtr->left);
     }
+    else if (searchKey > nodePtr->key)
+        deleteNode(searchKey, nodePtr->right);
+    else
+        makeDeletion(nodePtr);
+} // end deleteNode
 
-    public:
-    void add(ItemType val) {
-        if (root) {
-            this->addHelper(root, val);
-        } else {
-            root = new Node<ItemType>(val);
-        }
-    }
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::makeDeletion(Node* &nodePtr)
+{
+    //cout << " we are here\n";
+    Node* tempNodePtr = nullptr;
 
-    void print() {
-        printHelper(this->root);
-    }
+    if (nodePtr == nullptr)
+        cout << "Cannot delete empty node.\n";
 
-    int nodesCount() {
-        return nodesCountHelper(root);
-    }
+    else if (nodePtr->right == nullptr)
+    {
+        tempNodePtr = nodePtr;
+        nodePtr = nodePtr->left;
+        delete tempNodePtr;
+    } // end else if
 
-    int height() {
-        return heightHelper(this->root);
-    }
+    else if (nodePtr->left == nullptr)
+    {
+        tempNodePtr = nodePtr;
+        nodePtr = nodePtr->right;
+        delete tempNodePtr;
+    } // end else if
 
-    void printMaxPath() {
-        printMaxPathHelper(this->root);
-    }
+    else
+    {
+        tempNodePtr = nodePtr->right;
+        while (tempNodePtr->left)
+            tempNodePtr = tempNodePtr->left;
+        tempNodePtr->left = nodePtr->left;
+        tempNodePtr = nodePtr;
+        nodePtr = nodePtr->right;
+        delete tempNodePtr;
+    } // end else
+}  // end makeDeletion
 
-    bool deleteValue(ItemType value) {
-        return this->deleteValueHelper(NULL, this->root, value);
-    }
-};
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::displayInOrder(Node *nodePtr) const
+{
+    if (nodePtr)
+    {
+        displayInOrder(nodePtr->left);
+        cout << "Name: " << left << setw(10) << nodePtr->key;
+        cout << "   Birthday Month: " << nodePtr->value << endl;
+        displayInOrder(nodePtr->right);
+    } // end if
+} // end displayInOrder
 
-int main() {
-    BST<int> *bst = new BST<int>();
-    bst->add(11);
-    bst->add(1);
-    bst->add(6);
-    bst->add(-1);
-    bst->add(-10);
-    bst->add(100);
-    bst->print();
-    cout<<endl;
-    cout<<"Nodes count: "<<bst->nodesCount();
-    cout<<endl;
-    cout<<"Height: "<<bst->height();
-    cout<<endl;
-    cout<<"Max path: ";
-    bst->printMaxPath();
-    cout<<endl;
-    bst->deleteValue(11);
-    cout<<"11 removed: ";
-    bst->print();
-    cout<<endl;
-    cout<<"1 removed: ";
-    bst->deleteValue(1);
-    bst->print();
-    cout<<endl;
-    cout<<"-1 removed: ";
-    bst->deleteValue(-1);
-    bst->print();
-    cout<<endl;
-    cout<<"6 removed: ";
-    bst->deleteValue(6);
-    bst->print();
-    cout<<endl;
-    cout<<"-10 removed: ";
-    bst->deleteValue(-10);
-    bst->print();
-    cout<<endl;
-    cout<<"100 removed: ";
-    bst->deleteValue(100);
-    bst->print();
-    cout<<endl;
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::displayPreOrder(Node* nodePtr) const
+{
+    if (nodePtr)
+    {
+        cout << "Name: " << left << setw(10)<< nodePtr->key;
+        cout << "   Birthday Month: " << nodePtr->value << endl;
+        displayPreOrder(nodePtr->left);
+        displayPreOrder(nodePtr->right);
+    } // end if
+} // end displayPreOrder
 
-    return 0;
-}
+template <class KeyType, class ValueType>
+void BST<KeyType, ValueType>::displayPostOrder(Node* nodePtr) const
+{
+    if (nodePtr)
+    {
+        displayPostOrder(nodePtr->left);
+        displayPostOrder(nodePtr->right);
+        cout << "Name: " << left << setw(10) << nodePtr->key;
+        cout << "Birthday Month: " << nodePtr->value << endl;
+    } // end if
+} // end displayPostOrder
+
+template <class KeyType, class ValueType>
+int BST<KeyType, ValueType>::nodesCountHelper(Node* root)
+{
+    if (!root) return 0;
+    else return 1 + nodesCountHelper(root->left) + nodesCountHelper(root->right);
+} // end nodesCountHeler
+
+template <class KeyType, class ValueType>
+int BST<KeyType, ValueType>::nodesCount()
+{
+    return nodesCountHelper(root);
+} // end nodesCount
+
+template class BST<string, string>;
+//template class BST<Entry<class KeyType, class ValueType> >;

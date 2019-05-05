@@ -1,50 +1,49 @@
 #include <iostream>
 #include <string>
-#include "bst3.h"
-//#include "Node.h"
-//#include "Person.h"
-//#include "TreeDictionary.h"
+#include "bst.h"
 using namespace std;
 
-int main() {
-    BST<string> *bst = new BST<string>();
-    bst->add("Jaxon");
+int main ()
+{
+    BST<string, string> *bst = new BST<string, string> ();
+    bst->add("Jaxon", "April");
     cout << "Jaxon added\n";
-    bst->add("Darra");
+    bst->add("Darra", "November");
     cout << "Darra added\n";
-    bst->add("Jim");
+    bst->add("Jim", "November");
     cout << "Jim added\n";
-    bst->add("Ava");
+    bst->add("Ava", "April");
     cout << "Ava added\n";
-    bst->add("Brandon");
+    bst->add("Brandon", "July");
     cout << "Brandon added\n";
-    bst->add("Shayna");
+    bst->add("Shayna", "September");
     cout << "Shayna added\n";
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
+    //cout << "got here!!" << endl;
     bst->remove("Ava");
     cout << "Ava removed: \n";
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
     cout << "Shayna removed: \n";
     bst->remove("Shayna");
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
     cout << "Jim removed: \n";
     bst->remove("Jim");
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
     cout<<"Darra removed: \n";
     bst->remove("Darra");
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
     cout<<"Brandon removed: \n";
     bst->remove("Brandon");
-    bst->displayInOrder();
+    bst->displayInorder();
     cout<<endl;
     cout<<"Jaxon removed: \n";
     bst->remove("Jaxon");
-    bst->displayInOrder();
+    bst->displayInorder();
     cout << endl;
 
     return 0;
