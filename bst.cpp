@@ -5,14 +5,14 @@
 using namespace std;
 
 template <class KeyType, class ValueType>
-void BST<KeyType, ValueType>::insert(Node *&nodePtr, Node* &newNode)
+void BST<KeyType, ValueType>::insert(Node* nodePtr, Node* newNode)
 {
     if (nodePtr == nullptr)
         nodePtr = newNode;
     else if (newNode->key < nodePtr->key)
-        insert(nodePtr->left, newNode);
+        insert(getLeftChildPtr(nodePtr), newNode);
     else
-        insert(nodePtr->right, newNode);
+        insert(getRightChildPtr(nodePtr), newNode);
 } // end insert
 
 template <class KeyType, class ValueType>
@@ -22,7 +22,8 @@ void BST<KeyType, ValueType>::add(KeyType searchKey, ValueType item)
     newNode = new Node;
     newNode->value = item;
     newNode->key = searchKey;
-    newNode->left = newNode->right = nullptr;
+    setLeftChildPtr(newNode, nullptr);
+    setRightChildPtr(newNode, nullptr);
     insert(root, newNode);
 } // end insertNode
 
@@ -31,10 +32,10 @@ void BST<KeyType, ValueType>::destroySubTree(Node* nodePtr)
 {
     if (nodePtr)
     {
-        if (nodePtr->left)
-            destroySubTree(nodePtr->left);
-        if (nodePtr->right)
-            destroySubTree(nodePtr->right);
+        if (nodePtr->leftPtr)
+            destroySubTree(nodePtr->leftPtr);
+        if (nodePtr->rightPtr)
+            destroySubTree(nodePtr->rightPtr);
         delete nodePtr;
     } // end if
 } // end destroySubTree
@@ -49,78 +50,106 @@ bool BST<KeyType, ValueType>::searchNode(KeyType searchKey)
         if (nodePtr->key == searchKey)
             return true;
         else if (searchKey < nodePtr->key)
-            nodePtr = nodePtr->left;
+            nodePtr = nodePtr->leftPtr;
         else
-            nodePtr = nodePtr->right;
+            nodePtr = nodePtr->rightPtr;
     } // end while
     return false;
 } // end searchNode
 
 template <class KeyType, class ValueType>
-void BST<KeyType, ValueType>::remove(KeyType searchKey)
+bool BST<KeyType, ValueType>::remove(KeyType searchKey)
 {
-    deleteNode(searchKey, root);
+    bool isSuccessful = false;
+    root = removeValue(searchKey, root, isSuccessful);
+    return isSuccessful;
 } // end remove
 
-template <class KeyType, class ValueType>
-void BST<KeyType, ValueType>::deleteNode(KeyType searchKey, Node* &nodePtr)
+/*template <class KeyType, class ValueType>
+Node* BST<KeyType, ValueType>::removeValue(KeyType searchKey, Node* subTreePtr,
+                              bool isSuccessful)
 {
     //cout << " we are here\n";
-    if (searchKey < nodePtr->key)
+    if (subTreePtr == nullptr)
     {
-        //cout << "we are here\n";
-        deleteNode(searchKey, nodePtr->left);
+        isSuccessful = false;
     }
-    else if (searchKey > nodePtr->key)
-        deleteNode(searchKey, nodePtr->right);
+    else if (subTreePtr->key == searchKey)
+    {
+        subTreePtr = removeNode(subTreePtr);
+        isSuccessful = true;
+    }
+    else if (subTreePtr->key > searchKey)
+    {
+        Node* tempPtr = removeValue(getLeftChildPtr(subTreePtr), searchKey, isSuccessful);
+        subTreePtr->setLeftChildPtr(tempPtr);
+    }
     else
-        makeDeletion(nodePtr);
-} // end deleteNode
+    {
+        Node* tempPtr = removeValue(getRightChild(subTreePtr), searchKey, isSuccessful);
+        subTreePtr->setRightChildPtr(tempPtr);
+    }
+    return subTreePtr;
+} // end removeValue
 
 template <class KeyType, class ValueType>
-void BST<KeyType, ValueType>::makeDeletion(Node* &nodePtr)
+Node* BST<KeyType, ValueType>::removeNode(Node* nodePtr)
 {
     //cout << " we are here\n";
-    Node* tempNodePtr = nullptr;
-
-    if (nodePtr == nullptr)
-        cout << "Cannot delete empty node.\n";
-
-    else if (nodePtr->right == nullptr)
+    // nodePtr is a leaf
+    if (getLeftChildPtr(nodePtr) == nullptr && getRightChildPtr(nodePtr) == nullptr)
     {
-        tempNodePtr = nodePtr;
-        nodePtr = nodePtr->left;
-        delete tempNodePtr;
+        delete nodePtr;
+        nodePtr = nullptr;
+        return nodePtr;
+    } // end if
+    // nodePtr has one child
+    else if (getLeftChildPtr(nodePtr) == nullptr || getRighChild(nodePtr) == nullptr)
+    {
+        Node* nodeToConnectPtr = nullptr;
+        if (getRighChild(nodePtr) == nullptr)
+            Node* nodeToConnectPtr = getLeftChildPtr(nodePtr);
+        else
+            Node* nodeToConnectPtr = getRighChildPtr(nodePtr);
+        delete nodePtr;
+        return nodeToConnectPtr;
     } // end else if
-
-    else if (nodePtr->left == nullptr)
+    else // nodePtr has two children
     {
-        tempNodePtr = nodePtr;
-        nodePtr = nodePtr->right;
-        delete tempNodePtr;
-    } // end else if
-
-    else
-    {
-        tempNodePtr = nodePtr->right;
-        while (tempNodePtr->left)
-            tempNodePtr = tempNodePtr->left;
-        tempNodePtr->left = nodePtr->left;
-        tempNodePtr = nodePtr;
-        nodePtr = nodePtr->right;
-        delete tempNodePtr;
+        Node* rightChild = getRightChildPtr(nodePtr);
+        Node* tempPtr = removeLeftMostNode(rightChild, rightChild->key);
+        nodePtr->setRightChildPtr(tempPtr);
+        nodePtr->value = rightChild->key;
+        return nodePtr;
     } // end else
 }  // end makeDeletion
+
+template <class KeyType, class ValueType>
+Node* BST<KeyType, ValueType>::removeLeftMostNode(Node* nodePtr, KeyType inorderSuccessor)
+{
+    if (getLeftChildPtr(nodePtr) == nullptr)
+    {
+        inorderSuccessor = nodePtr->key;
+        return removeNode(nodePtr);
+    } // end if
+    else
+    {
+        Node* tempPtr = removeLeftMostNode(getLeftChildPtr(nodePtr), inorderSuccessor);
+        nodePtr->setLeftChildPtr(tempPtr);
+        return nodePtr;
+    } // end else
+} // end removeLeftMostNode */
 
 template <class KeyType, class ValueType>
 void BST<KeyType, ValueType>::displayInOrder(Node *nodePtr) const
 {
     if (nodePtr)
     {
-        displayInOrder(nodePtr->left);
+        cout << "we are here\n";
+        displayInOrder(getLeftChildPtr(nodePtr));
         cout << "Name: " << left << setw(10) << nodePtr->key;
         cout << "   Birthday Month: " << nodePtr->value << endl;
-        displayInOrder(nodePtr->right);
+        displayInOrder(getRightChildPtr(nodePtr));
     } // end if
 } // end displayInOrder
 
@@ -131,8 +160,8 @@ void BST<KeyType, ValueType>::displayPreOrder(Node* nodePtr) const
     {
         cout << "Name: " << left << setw(10)<< nodePtr->key;
         cout << "   Birthday Month: " << nodePtr->value << endl;
-        displayPreOrder(nodePtr->left);
-        displayPreOrder(nodePtr->right);
+        displayPreOrder(nodePtr->leftPtr);
+        displayPreOrder(nodePtr->rightPtr);
     } // end if
 } // end displayPreOrder
 
@@ -141,8 +170,8 @@ void BST<KeyType, ValueType>::displayPostOrder(Node* nodePtr) const
 {
     if (nodePtr)
     {
-        displayPostOrder(nodePtr->left);
-        displayPostOrder(nodePtr->right);
+        displayPostOrder(nodePtr->leftPtr);
+        displayPostOrder(nodePtr->rightPtr);
         cout << "Name: " << left << setw(10) << nodePtr->key;
         cout << "Birthday Month: " << nodePtr->value << endl;
     } // end if
@@ -152,7 +181,7 @@ template <class KeyType, class ValueType>
 int BST<KeyType, ValueType>::nodesCountHelper(Node* root)
 {
     if (!root) return 0;
-    else return 1 + nodesCountHelper(root->left) + nodesCountHelper(root->right);
+    else return 1 + nodesCountHelper(root->leftPtr) + nodesCountHelper(root->rightPtr);
 } // end nodesCountHeler
 
 template <class KeyType, class ValueType>
